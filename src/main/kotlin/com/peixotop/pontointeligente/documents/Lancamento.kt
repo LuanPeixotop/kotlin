@@ -3,11 +3,11 @@ package com.peixotop.pontointeligente.documents
 import com.peixotop.pontointeligente.enums.TipoEnum
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
-import java.util.*
+import java.time.LocalDateTime
 
 @Document
 data class Lancamento (
-        val data: Date,
+        val data: LocalDateTime,
         val tipo: TipoEnum,
         val funcionarioId: String,
         val descricao: String? = "",
