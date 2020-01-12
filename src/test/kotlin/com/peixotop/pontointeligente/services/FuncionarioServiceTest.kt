@@ -49,7 +49,7 @@ class FuncionarioServiceTest {
 
     @Test
     fun testBuscarFuncionarioPorId() {
-        val funcionario: Optional<Funcionario>? = this.funcionarioService?.buscarPorId(id)
+        val funcionario: Funcionario? = this.funcionarioService?.buscarPorId(id)
         Assertions.assertNotNull(funcionario)
     }
 

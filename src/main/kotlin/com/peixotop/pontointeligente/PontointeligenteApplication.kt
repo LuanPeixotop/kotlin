@@ -12,10 +12,12 @@ import org.springframework.boot.runApplication
 
 @SpringBootApplication
 class PontointeligenteApplication(val empresaRepository: EmpresaRepository,
-                                  val funcionarioRepository: FuncionarioRepository) : CommandLineRunner {
+                                  val funcionarioRepository: FuncionarioRepository,
+								  val lancamentoRepository: FuncionarioRepository) : CommandLineRunner {
     override fun run(vararg args: String?) {
         empresaRepository.deleteAll()
         funcionarioRepository.deleteAll()
+		lancamentoRepository.deleteAll()
 
         val empresa: Empresa = empresaRepository.save(Empresa(
 				"Empresa",
