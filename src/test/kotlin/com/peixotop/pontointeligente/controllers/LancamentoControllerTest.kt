@@ -28,7 +28,7 @@ import java.time.LocalDateTime
 
 @ExtendWith(SpringExtension::class)
 @SpringBootTest
-@WithMockUser
+@WithMockUser(username = "admin@admin.com", roles = ["ADMIN"])
 @AutoConfigureMockMvc
 class LancamentoControllerTest {
 

@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.BindingResult
 import org.springframework.validation.ObjectError
 import org.springframework.web.bind.annotation.*
@@ -127,6 +128,7 @@ class LancamentoController(val lancamentoService: LancamentoService,
         return ResponseEntity.ok(response)
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping(value = ["/{id}"])
     fun remover(@PathVariable("id") id: String) : ResponseEntity<Response<String>> {
         val response: Response<String> = Response<String>()
@@ -134,7 +136,7 @@ class LancamentoController(val lancamentoService: LancamentoService,
 
         if (lancamento == null) {
             response.errors.add("Erro ao remover o lançamento $id. Registro não encontrado")
-            ResponseEntity.badRequest().body(response)
+            return ResponseEntity.badRequest().body(response)
         }
 
         lancamentoService.remover(id)
