@@ -27,7 +27,7 @@ class PontointeligenteApplication(val empresaRepository: EmpresaRepository,
         val admin: Funcionario =  funcionarioRepository.save(Funcionario(
 				"Admin",
 				"admin@email.com",
-				SenhaUtils().gerarBcrypt("senhafoda"),
+				SenhaUtils().gerarBcrypt("admin"),
 				"12345678909",
 				PerfilEnum.ROLE_ADMIN,
 				empresa.id!!
@@ -37,7 +37,16 @@ class PontointeligenteApplication(val empresaRepository: EmpresaRepository,
         val funcionario: Funcionario = funcionarioRepository.save(Funcionario(
 				"Funcionario",
 				"funcionario@email.com",
-				SenhaUtils().gerarBcrypt("senhafodadefuncionario"),
+				SenhaUtils().gerarBcrypt("funcionario"),
+				"12345678901",
+				PerfilEnum.ROLE_USUARIO,
+				empresa.id!!
+		))
+
+		val funcionario2: Funcionario = funcionarioRepository.save(Funcionario(
+				"Funcionario2",
+				"funcionario2@email.com",
+				SenhaUtils().gerarBcrypt("funcionario2"),
 				"12345678901",
 				PerfilEnum.ROLE_USUARIO,
 				empresa.id!!
@@ -46,6 +55,7 @@ class PontointeligenteApplication(val empresaRepository: EmpresaRepository,
 		println("Empresa ID: " + empresa.id)
 		println("Admin ID: " + admin.id)
 		println("Funcionario ID: " + funcionario.id)
+		println("Funcionario2 ID: " + funcionario2.id)
     }
 
 }

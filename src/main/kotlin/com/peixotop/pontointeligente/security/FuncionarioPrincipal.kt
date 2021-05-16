@@ -1,6 +1,8 @@
 package com.peixotop.pontointeligente.security
 
 import com.peixotop.pontointeligente.documents.Funcionario
+import com.peixotop.pontointeligente.enums.PerfilEnum
+import com.peixotop.pontointeligente.enums.TipoEnum
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
@@ -23,4 +25,10 @@ class FuncionarioPrincipal(val funcionario: Funcionario) : UserDetails {
     override fun isAccountNonExpired(): Boolean = true
 
     override fun isAccountNonLocked(): Boolean = true
+
+    fun getUserId(): String? = funcionario.id
+
+    fun getPerfilFuncionario() : PerfilEnum {
+        return funcionario.perfil
+    }
 }

@@ -4,14 +4,19 @@ import com.peixotop.pontointeligente.Response
 import com.peixotop.pontointeligente.documents.Funcionario
 import com.peixotop.pontointeligente.documents.Lancamento
 import com.peixotop.pontointeligente.dtos.LancamentoDto
+import com.peixotop.pontointeligente.enums.PerfilEnum
 import com.peixotop.pontointeligente.enums.TipoEnum
+import com.peixotop.pontointeligente.security.FuncionarioPrincipal
+import com.peixotop.pontointeligente.security.IAuthenticationFacade
 import com.peixotop.pontointeligente.services.FuncionarioService
 import com.peixotop.pontointeligente.services.LancamentoService
 import org.apache.commons.lang3.EnumUtils
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.BindingResult
@@ -22,12 +27,16 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import javax.validation.Valid
 
+
 @RestController
 @RequestMapping("/api/lancamentos")
 class LancamentoController(val lancamentoService: LancamentoService,
                            val funcionarioService: FuncionarioService) {
 
     private val dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
+
+    @Autowired
+    private val authenticationFacade: IAuthenticationFacade? = null
 
     @Value("\${paginacao.qtd_por_pagina}")
     val qtdPorPagina: Int = 0
@@ -38,7 +47,14 @@ class LancamentoController(val lancamentoService: LancamentoService,
 
         val response: Response<LancamentoDto> = Response<LancamentoDto>()
 
+
         validarFuncionario(lancamentoDto, result)
+
+        if (!pertenceAoUsuario(lancamentoDto.funcionarioId!!)) {
+            result.addError(ObjectError("funcionario",
+                    "Você não pode adicionar lançamentos do funcionário " + lancamentoDto.funcionarioId))
+        }
+
         validaTipoLancamento(lancamentoDto.tipo, result)
         validaDataLancamento(lancamentoDto.data, result)
 
@@ -54,6 +70,7 @@ class LancamentoController(val lancamentoService: LancamentoService,
         return ResponseEntity.ok(response)
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping(value = ["/{id}"])
     fun atualizar(@PathVariable("id") id: String,
                   @Valid @RequestBody lancamentoDto: LancamentoDto,
@@ -87,13 +104,18 @@ class LancamentoController(val lancamentoService: LancamentoService,
     }
 
     @GetMapping(value = ["/{id}"])
-    private fun listarPorId(@PathVariable("id") id: String): ResponseEntity<Response<LancamentoDto>> {
+    fun listarPorId(@PathVariable("id") id: String): ResponseEntity<Response<LancamentoDto>> {
         val response: Response<LancamentoDto> = Response<LancamentoDto>()
         val lancamento: Lancamento? = lancamentoService.buscarPorId(id)
 
         if (lancamento == null) {
-            response.errors.add("Lancamento não encontrado para o ID: $id")
+            response.errors.add("Lançamento $id não encontrado")
             return ResponseEntity.badRequest().body(response)
+        }
+
+        if (!pertenceAoUsuario(lancamento.funcionarioId)) {
+            response.errors.add("Você não tem acesso ao Lançamento $id")
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response)
         }
 
         response.data = converterLancamentoParaDto(lancamento)
@@ -108,6 +130,11 @@ class LancamentoController(val lancamentoService: LancamentoService,
             ResponseEntity<Response<Page<LancamentoDto>>> {
 
         val response: Response<Page<LancamentoDto>> = Response<Page<LancamentoDto>>()
+
+        if (!pertenceAoUsuario(funcionarioId)) {
+            response.errors.add("Você não tem acesso aos Lançamentos do usuário $funcionarioId")
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response)
+        }
 
         val direction: String = dir.toUpperCase()
 
@@ -130,7 +157,7 @@ class LancamentoController(val lancamentoService: LancamentoService,
 
     @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping(value = ["/{id}"])
-    fun remover(@PathVariable("id") id: String) : ResponseEntity<Response<String>> {
+    fun remover(@PathVariable("id") id: String): ResponseEntity<Response<String>> {
         val response: Response<String> = Response<String>()
         val lancamento: Lancamento? = lancamentoService.buscarPorId(id)
 
@@ -204,5 +231,18 @@ class LancamentoController(val lancamentoService: LancamentoService,
             result.addError(ObjectError("lancamento",
                     "Data do lançamento fora do padrão ISO_LOCAL_DATE_TIME"))
         }
+    }
+
+    private fun retornaUsuarioLogado(): FuncionarioPrincipal {
+        val authentication = authenticationFacade!!.getAuthentication()
+        return authentication.principal as FuncionarioPrincipal
+    }
+
+    private fun pertenceAoUsuario(funcionarioId: String): Boolean {
+        val usuarioLogado = retornaUsuarioLogado()
+        if (usuarioLogado.getPerfilFuncionario() == PerfilEnum.ROLE_ADMIN ||
+                usuarioLogado.getUserId() == funcionarioId) return true
+
+        return false
     }
 }
