@@ -50,7 +50,7 @@ class LancamentoController(val lancamentoService: LancamentoService,
 
         validarFuncionario(lancamentoDto, result)
 
-        if (!pertenceAoUsuario(lancamentoDto.funcionarioId!!)) {
+        if (!lancamentoDto.funcionarioId.isNullOrBlank() && !pertenceAoUsuario(lancamentoDto.funcionarioId)) {
             result.addError(ObjectError("funcionario",
                     "Você não pode adicionar lançamentos do funcionário " + lancamentoDto.funcionarioId))
         }
@@ -131,7 +131,7 @@ class LancamentoController(val lancamentoService: LancamentoService,
 
         val response: Response<Page<LancamentoDto>> = Response<Page<LancamentoDto>>()
 
-        if (!pertenceAoUsuario(funcionarioId)) {
+        if (!funcionarioId.isBlank() && !pertenceAoUsuario(funcionarioId)) {
             response.errors.add("Você não tem acesso aos Lançamentos do usuário $funcionarioId")
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response)
         }
